@@ -23,6 +23,12 @@ public:
 
 protected:
   // Please add any additional state to the ByteStream here, and not to the Writer and Reader interfaces.
+  // this data will be shared between the Writer and Reader interfaces.
+  int pushcnt = 0;
+  int popcnt = 0;
+  std::string bytes = "";
+  uint64_t currlen = 0;
+  bool is_closed_ = false;
   uint64_t capacity_;
   bool error_ {};
 };

@@ -2,64 +2,69 @@
 
 using namespace std;
 
-ByteStream::ByteStream( uint64_t capacity ) : capacity_( capacity ) {}
+ByteStream::ByteStream( uint64_t capacity ) : capacity_( capacity ) {
+  bytes.reserve(capacity); // reserve some space in the string
+}
 
 bool Writer::is_closed() const
 {
-  // Your code here.
-  return {};
+  return is_closed_;
 }
 
 void Writer::push( string data )
 {
-  // Your code here.
-  (void)data;
-  return;
+  size_t space_left = capacity_ - currlen;
+  size_t to_append = std::min(space_left, data.size());
+
+  bytes.append(data, 0, to_append); // this avoids creation of another string
+  pushcnt += to_append;
+  currlen += to_append;
 }
 
 void Writer::close()
 {
-  // Your code here.
+  is_closed_ = true;
 }
 
 uint64_t Writer::available_capacity() const
 {
-  // Your code here.
-  return {};
+  return capacity_ - currlen;
 }
 
 uint64_t Writer::bytes_pushed() const
 {
-  // Your code here.
-  return {};
+  return pushcnt;
 }
 
 bool Reader::is_finished() const
 {
-  // Your code here.
-  return {};
+  return is_closed_ and currlen == 0;
 }
 
 uint64_t Reader::bytes_popped() const
 {
-  // Your code here.
-  return {};
+  return popcnt;
 }
 
 string_view Reader::peek() const
 {
-  // Your code here.
-  return {};
+  return std::string_view(bytes).substr(0); // doing this instead of returning bytes directly
 }
 
 void Reader::pop( uint64_t len )
 {
-  // Your code here.
-  (void)len;
+  if (len >= currlen) {
+    popcnt += currlen;
+    currlen = 0;
+    bytes = "";
+  } else {
+    popcnt += len;
+    bytes.erase(0, len); // erase also takes care of the case when len > bytes.size() and it does not create another string
+    currlen -= len;
+  }
 }
 
 uint64_t Reader::bytes_buffered() const
 {
-  // Your code here.
-  return {};
+  return currlen;
 }
