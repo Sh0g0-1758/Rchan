@@ -33,24 +33,29 @@ void Reassembler::insert( uint64_t first_index, std::string data, bool is_last_s
     output_.writer().push(data);
     uint64_t pushed = writer().bytes_pushed() - previous_push;
     curr_index += pushed;
-    for (auto it : pending_data) {
-      if (it.first == curr_index) {
-        previous_push = writer().bytes_pushed();
-        output_.writer().push(pending_data[curr_index]);
-        pending_data.erase(curr_index);
-        pushed = writer().bytes_pushed() - previous_push;
-        curr_index += pushed;
-      } else if (it.first < curr_index) {
-        if(it.first + it.second.size() - 1 >= curr_index) {
-          previous_push = writer().bytes_pushed();
-          output_.writer().push(it.second.substr(curr_index - it.first));
-          pending_data.erase(it.first);
-          pushed = writer().bytes_pushed() - previous_push;
-          curr_index += pushed;
-        } else {
-          pending_data.erase(it.first);
+    for (auto it = pending_data.begin(); it != pending_data.end();) {
+        if (it->first == curr_index) {
+            previous_push = writer().bytes_pushed();
+            output_.writer().push(it->second);
+            pushed = writer().bytes_pushed() - previous_push;
+            curr_index += pushed;
+            it = pending_data.erase(it);
+        } 
+        else if (it->first < curr_index) {
+            if (it->first + it->second.size() - 1 >= curr_index) {
+                previous_push = writer().bytes_pushed();
+                output_.writer().push(it->second.substr(curr_index - it->first));
+                pushed = writer().bytes_pushed() - previous_push;
+                curr_index += pushed;
+                it = pending_data.erase(it);
+            } 
+            else {
+                it = pending_data.erase(it);
+            }
+        } 
+        else {
+            ++it;
         }
-      }
     }
   }
 
