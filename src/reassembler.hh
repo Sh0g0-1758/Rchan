@@ -1,6 +1,7 @@
 #pragma once
 
 #include "byte_stream.hh"
+#include <map>
 
 class Reassembler
 {
@@ -35,6 +36,7 @@ public:
 
   // Access output stream reader
   Reader& reader() { return output_.reader(); }
+  // note that the reader is also const
   const Reader& reader() const { return output_.reader(); }
 
   // Access output stream writer, but const-only (can't write from outside)
@@ -42,4 +44,7 @@ public:
 
 private:
   ByteStream output_; // the Reassembler writes to this ByteStream
+  std::map<uint64_t,std::string> pending_data {};
+  uint64_t curr_index = 0;
+  uint64_t last_index = -1;
 };

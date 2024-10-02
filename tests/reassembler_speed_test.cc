@@ -42,8 +42,11 @@ void speed_test( const size_t num_chunks,   // NOLINT(bugprone-easily-swappable-
   output_data.reserve( data.size() );
 
   const auto start_time = steady_clock::now();
+  int cnt = 0;
   while ( not split_data.empty() ) {
+    cout << "START : " << cnt << endl;
     auto& next = split_data.front();
+    cout << "INDEX : " << get<uint64_t>( next ) << endl;
     reassembler.insert( get<uint64_t>( next ), move( get<string>( next ) ), get<bool>( next ) );
     split_data.pop();
 
@@ -51,6 +54,8 @@ void speed_test( const size_t num_chunks,   // NOLINT(bugprone-easily-swappable-
       output_data += reassembler.reader().peek();
       reassembler.reader().pop( output_data.size() - reassembler.reader().bytes_popped() );
     }
+    cout << "END : " << cnt << endl;
+    cnt++;
   }
 
   const auto stop_time = steady_clock::now();
