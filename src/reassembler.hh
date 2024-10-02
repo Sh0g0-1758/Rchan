@@ -28,6 +28,8 @@ public:
    * (i.e., bytes that couldn't be written even if earlier gaps get filled in).
    *
    * The Reassembler should close the stream after writing the last byte.
+   * 
+   * AAAAAAAA/...AAAA/BBBBBB
    */
   void insert( uint64_t first_index, std::string data, bool is_last_substring );
 

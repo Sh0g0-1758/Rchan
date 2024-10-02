@@ -59,11 +59,9 @@ void Reassembler::insert( uint64_t first_index, std::string data, bool is_last_s
     }
   }
 
-  std::cout << "before segfault" << std::endl;
   if (is_last_substring) {
     last_index = first_index + data.size();
   }
-  std::cout << "after segfault" << std::endl;
 
   if (last_index == curr_index) output_.writer().close();
 }
