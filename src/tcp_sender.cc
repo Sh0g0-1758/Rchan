@@ -27,12 +27,12 @@ void TCPSender::push( const TransmitFunction& transmit )
     msg.SYN = true;
   }
   msg.seqno = seqno;
-  // If window size is 0, we still send a payload of size 1
-  uint64_t payload_size = max(min(window_size - sequence_numbers_in_flight(), MAX_PAYLOAD_SIZE), (size_t)1);
+  uint64_t payload_size = min(window_size - sequence_numbers_in_flight(), MAX_PAYLOAD_SIZE);
   msg.payload = input_.reader().peek().substr(0, payload_size);
   input_.reader().pop(payload_size);
-  if (input_.reader().is_finished()) {
+  if (input_.reader().is_finished() and window_size - sequence_numbers_in_flight() - msg.sequence_length() > 0 and !FIN_SENT) {
     msg.FIN = true;
+    FIN_SENT = true;
   }
   if (input_.has_error()) {
     msg.RST = true;
@@ -55,6 +55,7 @@ void TCPSender::
 receive( const TCPReceiverMessage& msg )
 {
   window_size = msg.window_size;
+  if(!msg.ackno.has_value() or msg.ackno.value().unwrap(isn_, 0) > seqno.unwrap(isn_, 0)) return;
   while(!outstanding_msg.empty() && (outstanding_msg.front().seqno + outstanding_msg.front().sequence_length()).unwrap(isn_, 0) <= msg.ackno.value().unwrap(isn_, 0)) {
     outstanding_msg.pop();
   }

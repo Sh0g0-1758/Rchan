@@ -57,4 +57,5 @@ private:
   std::queue<TCPSenderMessage> outstanding_msg {};
   uint64_t consecutive_ret {};
   uint64_t timer {};
+  bool FIN_SENT = false;
 };
