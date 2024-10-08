@@ -27,10 +27,12 @@ void TCPSender::push( const TransmitFunction& transmit )
     msg.SYN = true;
   }
   msg.seqno = seqno;
-  uint64_t payload_size = min(window_size - sequence_numbers_in_flight(), TCPConfig::MAX_PAYLOAD_SIZE);
+  uint64_t temp_window_size = window_size;
+  if (temp_window_size == 0) temp_window_size = 1;
+  uint64_t payload_size = min(temp_window_size - sequence_numbers_in_flight(), TCPConfig::MAX_PAYLOAD_SIZE);
   msg.payload = input_.reader().peek().substr(0, payload_size);
   input_.reader().pop(payload_size);
-  if (input_.reader().is_finished() and window_size - sequence_numbers_in_flight() - msg.sequence_length() > 0 and !FIN_SENT) {
+  if (input_.reader().is_finished() and ((int64_t)temp_window_size - (int64_t)sequence_numbers_in_flight() - (int64_t)msg.sequence_length()) > 0 and !FIN_SENT) {
     msg.FIN = true;
     FIN_SENT = true;
   }
@@ -41,7 +43,8 @@ void TCPSender::push( const TransmitFunction& transmit )
     outstanding_msg.push(msg);
     seqno = seqno + msg.sequence_length();
     transmit(msg);
-  } 
+  }
+  if (temp_window_size - sequence_numbers_in_flight() > 0 and !input_.reader().peek().empty()) push(transmit);
 }
 
 TCPSenderMessage TCPSender::make_empty_message() const
@@ -69,10 +72,12 @@ void TCPSender::tick( uint64_t ms_since_last_tick, const TransmitFunction& trans
   timer += ms_since_last_tick;
   if(!outstanding_msg.empty()) {
     if(timer >= RTO) {
-      consecutive_ret++;
-      transmit(outstanding_msg.front());
-      RTO = RTO * 2;
+      if(window_size != 0) {
+        consecutive_ret++;
+        RTO = RTO * 2;
+      }
       timer = 0;
+      transmit(outstanding_msg.front());
     }
   }
 }
