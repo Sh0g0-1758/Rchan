@@ -22,7 +22,6 @@ uint64_t TCPSender::consecutive_retransmissions() const
 
 void TCPSender::push( const TransmitFunction& transmit )
 {
-  if(to_send_seqno.unwrap(isn_, 0) > seqno.unwrap(isn_, 0)) return;
   TCPSenderMessage msg;
   if (seqno == isn_) {
     msg.SYN = true;
@@ -41,7 +40,6 @@ void TCPSender::push( const TransmitFunction& transmit )
   if(msg.sequence_length() != 0) {
     outstanding_msg.push(msg);
     seqno = seqno + msg.sequence_length();
-    to_send_seqno = to_send_seqno + msg.sequence_length();
     transmit(msg);
   } 
 }
@@ -49,16 +47,15 @@ void TCPSender::push( const TransmitFunction& transmit )
 TCPSenderMessage TCPSender::make_empty_message() const
 {
   TCPSenderMessage msg;
-  msg.seqno = to_send_seqno;
+  msg.seqno = seqno;
   return msg;
 }
 
 void TCPSender::
 receive( const TCPReceiverMessage& msg )
 {
-  seqno = msg.ackno.value();
   window_size = msg.window_size;
-  while(!outstanding_msg.empty() && (outstanding_msg.front().seqno + outstanding_msg.front().sequence_length()).unwrap(isn_, 0) <= seqno.unwrap(isn_, 0)) {
+  while(!outstanding_msg.empty() && (outstanding_msg.front().seqno + outstanding_msg.front().sequence_length()).unwrap(isn_, 0) <= msg.ackno.value().unwrap(isn_, 0)) {
     outstanding_msg.pop();
   }
   consecutive_ret = 0;
