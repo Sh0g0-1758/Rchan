@@ -51,6 +51,9 @@ TCPSenderMessage TCPSender::make_empty_message() const
 {
   TCPSenderMessage msg;
   msg.seqno = seqno;
+  if (input_.has_error()) {
+    msg.RST = true;
+  }
   return msg;
 }
 
@@ -58,6 +61,7 @@ void TCPSender::
 receive( const TCPReceiverMessage& msg )
 {
   window_size = msg.window_size;
+  if(msg.RST) input_.reader().set_error();
   if(!msg.ackno.has_value() or msg.ackno.value().unwrap(isn_, 0) > seqno.unwrap(isn_, 0)) return;
   while(!outstanding_msg.empty() && (outstanding_msg.front().seqno + outstanding_msg.front().sequence_length()).unwrap(isn_, 0) <= msg.ackno.value().unwrap(isn_, 0)) {
     outstanding_msg.pop();
