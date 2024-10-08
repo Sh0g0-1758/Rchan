@@ -16,8 +16,7 @@ void Printer::diagnostic( std::string_view test_name,
        << " failed after these steps:\n\n";
   unsigned int step_num = 0;
   for ( const auto& [str, col] : steps_executed ) {
-    cerr << "  " << step_num++ << "."
-         << "\t" << with_color( col, str ) << "\n";
+    cerr << "  " << step_num++ << "." << "\t" << with_color( col, str ) << "\n";
   }
   cerr << with_color( red, "  ***** Unsuccessful " + failing_step + " *****\n\n" );
 

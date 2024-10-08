@@ -28,7 +28,7 @@ public:
    * (i.e., bytes that couldn't be written even if earlier gaps get filled in).
    *
    * The Reassembler should close the stream after writing the last byte.
-   * 
+   *
    * AAAAAAAA/...AAAA/BBBBBB
    */
   void insert( uint64_t first_index, std::string data, bool is_last_substring );
@@ -46,7 +46,7 @@ public:
 
 private:
   ByteStream output_; // the Reassembler writes to this ByteStream
-  std::map<uint64_t,std::string> pending_data {};
+  std::map<uint64_t, std::string> pending_data {};
   uint64_t curr_index = 0;
   uint64_t last_index = -1;
 };
