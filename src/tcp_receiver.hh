@@ -3,6 +3,7 @@
 #include "reassembler.hh"
 #include "tcp_receiver_message.hh"
 #include "tcp_sender_message.hh"
+#include <optional>
 
 class TCPReceiver
 {
@@ -27,7 +28,6 @@ public:
 
 private:
   Reassembler reassembler_;
-  Wrap32 zero_point {0};
-  Wrap32 ackno {0};
-  bool ISN {};
+  std::optional<Wrap32> zero_point {};
+  std::optional<Wrap32> ackno {};
 };
