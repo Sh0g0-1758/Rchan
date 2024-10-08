@@ -12,8 +12,6 @@
 #include <queue>
 #include <map>
 
-const uint64_t MAX_PAYLOAD_SIZE = 1452;
-
 class TCPSender
 {
 public:

@@ -27,7 +27,7 @@ void TCPSender::push( const TransmitFunction& transmit )
     msg.SYN = true;
   }
   msg.seqno = seqno;
-  uint64_t payload_size = min(window_size - sequence_numbers_in_flight(), MAX_PAYLOAD_SIZE);
+  uint64_t payload_size = min(window_size - sequence_numbers_in_flight(), TCPConfig::MAX_PAYLOAD_SIZE);
   msg.payload = input_.reader().peek().substr(0, payload_size);
   input_.reader().pop(payload_size);
   if (input_.reader().is_finished() and window_size - sequence_numbers_in_flight() - msg.sequence_length() > 0 and !FIN_SENT) {
@@ -58,10 +58,10 @@ receive( const TCPReceiverMessage& msg )
   if(!msg.ackno.has_value() or msg.ackno.value().unwrap(isn_, 0) > seqno.unwrap(isn_, 0)) return;
   while(!outstanding_msg.empty() && (outstanding_msg.front().seqno + outstanding_msg.front().sequence_length()).unwrap(isn_, 0) <= msg.ackno.value().unwrap(isn_, 0)) {
     outstanding_msg.pop();
+    consecutive_ret = 0;
+    RTO = initial_RTO_ms_;
+    timer = 0;
   }
-  consecutive_ret = 0;
-  RTO = initial_RTO_ms_;
-  timer = 0;
 }
 
 void TCPSender::tick( uint64_t ms_since_last_tick, const TransmitFunction& transmit )
