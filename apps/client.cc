@@ -39,17 +39,6 @@ void listenForMessages(CS144TCPSocket& sock) {
 
 int main() {
     CS144TCPSocket sock;
-    
-    int enable = 1;
-    if (setsockopt(sock.fd_num(), SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0) {
-        std::cerr << "Failed to set SO_REUSEADDR\n";
-        return 1;
-    }
-    
-    if (setsockopt(sock.fd_num(), SOL_SOCKET, SO_REUSEPORT, &enable, sizeof(int)) < 0) {
-        std::cerr << "Failed to set SO_REUSEPORT\n";
-        return 1;
-    }
 
     std::string serverIP;
     std::cout << "Enter server IP address: ";
