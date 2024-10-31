@@ -120,10 +120,10 @@ using LossyTCPOverIPv4MinnowSocket = TCPMinnowSocket<LossyFdAdapter<TCPOverIPv4O
 //!   immediately terminated with a RST (call `wait_until_closed` to avoid this)
 
 //! Helper class that makes a TCPOverIPv4MinnowSocket behave more like a (kernel) TCPSocket
-class CS144TCPSocket : public TCPOverIPv4MinnowSocket
+class RchanSocket : public TCPOverIPv4MinnowSocket
 {
 public:
-  CS144TCPSocket() : TCPOverIPv4MinnowSocket( TCPOverIPv4OverTunFdAdapter { TunFD { "tun144" } } ) {}
+  RchanSocket() : TCPOverIPv4MinnowSocket( TCPOverIPv4OverTunFdAdapter { TunFD { "tun144" } } ) {}
   void connect( const Address& address )
   {
     TCPConfig tcp_config;
