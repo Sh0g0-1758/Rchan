@@ -5,6 +5,7 @@
 struct server_info {
     std::string server_name{};
     std::string server_ip{};
+    int server_port{};
     std::string root_password{};
     std::string server_password{};
 };
@@ -212,6 +213,7 @@ public:
                 } else if(messageJSON["type"].get<std::string>() == "add_server") {
                     std::string server_name = messageJSON["server_name"].get<std::string>();
                     std::string server_ip = messageJSON["server_ip"].get<std::string>();
+                    int server_port = messageJSON["server_port"].get<int>();
                     if(servers.find(server_name) != servers.end()) {
                         json message = {
                             {"status", "error"},
@@ -225,6 +227,7 @@ public:
                             server_info{
                                 server_name,
                                 server_ip,
+                                server_port,
                                 hashPSWD(messageJSON["root_password"].get<std::string>()),
                                 hashPSWD(messageJSON["server_password"].get<std::string>())
                             }
@@ -233,6 +236,7 @@ public:
                             {"status", "success"},
                             {"type", "add_server"},
                             {"message", "Server " + server_name + " successfully added"},
+                            {"server_port", server_port}
                         };
                         sendMessage(message, clientSocket);
                         std::cout << "Server " << server_name << " joined Rchan!\n";

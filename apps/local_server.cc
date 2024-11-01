@@ -5,7 +5,7 @@
 
 class LocalServer {
 private:
-    static const int PORT = 8080;
+    int PORT = 8080;
     static const int BUFFER_SIZE = 4096;
 
     std::vector<int> clients{};
@@ -15,7 +15,7 @@ private:
     int addrlen = sizeof(address);
     int opt = 1;
 public:
-    LocalServer() {
+    LocalServer(int port) : PORT(port) {
         if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
             perror("socket failed");
             exit(EXIT_FAILURE);

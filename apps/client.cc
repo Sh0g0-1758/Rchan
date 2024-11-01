@@ -53,8 +53,8 @@ public:
                         }
                     } else if (message["type"].get<std::string>() == "add_server") {
                         std::cout << "Added local server to Rchan!\n";
-                        localServerPtr = std::make_unique<LocalServer>();
-                        localServerPtr -> Run();
+                        localServerPtr = std::make_unique<LocalServer>(message["server_port"].get<int>());
+                        std::thread([this]() { localServerPtr -> Run(); }).detach();
                     } else if (message["type"].get<std::string>() == "remove_server") {
                         std::cout << "Removed local server from Rchan!\n";
                         localServerPtr.reset();
@@ -130,12 +130,13 @@ public:
         }
     }
 
-
-
     void HostServer() {
         std::cout << "Enter server IP> ";
         std::string host_server_ip;
         std::getline(std::cin >> std::ws, host_server_ip);
+        std::cout << "Enter server port> ";
+        int host_server_port;
+        std::cin >> host_server_port;
         std::cout << "Enter server name> ";
         std::string server_name;
         std::getline(std::cin >> std::ws, server_name);
@@ -149,6 +150,7 @@ public:
             {"type", "add_server"},
             {"server_name", server_name},
             {"server_ip", host_server_ip},
+            {"server_port", host_server_port},
             {"root_password", root_password},
             {"server_password", server_password}
         };
