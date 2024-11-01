@@ -168,84 +168,55 @@ public:
             }
 
             std::string REVCDmessage(buffer, bytesRead);
-            std::cout << "Received: " << REVCDmessage << std::endl;
-            json messageJson = json::parse(REVCDmessage);
-            if (messageJson["type"].get<std::string>() == "chat_history") {
-                sendChatHistory(clientSocket);
-            } else if(messageJson["type"].get<std::string>() == "username") {
-                std::string username = messageJson["username"].get<std::string>();
-                if(std::find(usernames.begin(), usernames.end(), username) != usernames.end()) {
-                    json message = {
-                        {"status", "error"},
-                        {"type", "username"},
-                        {"message", "Username " + username + " already taken, please try a different user name"},
-                    };
-                    sendMessage(message, clientSocket);
-                } else {
-                    usernames.push_back(username);
-                    json message = {
-                        {"status", "success"},
-                        {"type", "username"},
-                        {"message", "Username " + username + " successfully set"},
-                    };
-                    sendMessage(message, clientSocket);
-                }
-            } else if(messageJson["type"].get<std::string>() == "add_server") {
-                std::string server_name = messageJson["server_name"].get<std::string>();
-                std::string server_ip = messageJson["server_ip"].get<std::string>();
-                if(servers.find(server_name) != servers.end()) {
-                    json message = {
-                        {"status", "error"},
-                        {"type", "add_server"},
-                        {"message", "Server " + server_name + " already exists, please try a different server name"},
-                    };
-                    sendMessage(message, clientSocket);
-                } else {
-                    servers[server_name] = server_ip;
-                    localRChanServers[server_name] = (
-                        server_info{
-                            server_name,
-                            server_ip,
-                            hashPSWD(messageJson["root_password"].get<std::string>()),
-                            hashPSWD(messageJson["server_password"].get<std::string>())
-                        }
-                    );
-                    json message = {
-                        {"status", "success"},
-                        {"type", "add_server"},
-                        {"message", "Server " + server_name + " successfully added"},
-                    };
-                    sendMessage(message, clientSocket);
-                    std::cout << "Server " << server_name << " joined Rchan!\n";
-                    // Broadcast updated servers to all clients
-                    {
-                        std::lock_guard<std::mutex> lock(clientsMutex);
-                        for(int client : clients) {
-                            sendAvailableServers(client);
-                        }
-                    }
-                }
-            } else if(messageJson["type"].get<std::string>() == "remove_server") {
-                std::string server_name = messageJson["server_name"].get<std::string>();
-                std::string root_password = hashPSWD(messageJson["root_password"].get<std::string>());
-                if (localRChanServers.find(server_name) != localRChanServers.end()) {
-                    if (localRChanServers[server_name].root_password != root_password) {
+            std::vector<json> messagesJSON = splitJSON(REVCDmessage);
+            for(const json& messageJSON : messagesJSON) {
+                if (messageJSON["type"].get<std::string>() == "chat_history") {
+                    sendChatHistory(clientSocket);
+                } else if(messageJSON["type"].get<std::string>() == "username") {
+                    std::string username = messageJSON["username"].get<std::string>();
+                    if(std::find(usernames.begin(), usernames.end(), username) != usernames.end()) {
                         json message = {
                             {"status", "error"},
-                            {"type", "remove_server"},
-                            {"message", "Incorrect root password for server " + server_name},
+                            {"type", "username"},
+                            {"message", "Username " + username + " already taken, please try a different user name"},
                         };
                         sendMessage(message, clientSocket);
                     } else {
-                        localRChanServers.erase(server_name);
-                        servers.erase(server_name);
+                        usernames.push_back(username);
                         json message = {
                             {"status", "success"},
-                            {"type", "remove_server"},
-                            {"message", "Server " + server_name + " successfully removed"},
+                            {"type", "username"},
+                            {"message", "Username " + username + " successfully set"},
                         };
                         sendMessage(message, clientSocket);
-                        std::cout << "Server " << server_name << " left Rchan!\n";
+                    }
+                } else if(messageJSON["type"].get<std::string>() == "add_server") {
+                    std::string server_name = messageJSON["server_name"].get<std::string>();
+                    std::string server_ip = messageJSON["server_ip"].get<std::string>();
+                    if(servers.find(server_name) != servers.end()) {
+                        json message = {
+                            {"status", "error"},
+                            {"type", "add_server"},
+                            {"message", "Server " + server_name + " already exists, please try a different server name"},
+                        };
+                        sendMessage(message, clientSocket);
+                    } else {
+                        servers[server_name] = server_ip;
+                        localRChanServers[server_name] = (
+                            server_info{
+                                server_name,
+                                server_ip,
+                                hashPSWD(messageJSON["root_password"].get<std::string>()),
+                                hashPSWD(messageJSON["server_password"].get<std::string>())
+                            }
+                        );
+                        json message = {
+                            {"status", "success"},
+                            {"type", "add_server"},
+                            {"message", "Server " + server_name + " successfully added"},
+                        };
+                        sendMessage(message, clientSocket);
+                        std::cout << "Server " << server_name << " joined Rchan!\n";
                         // Broadcast updated servers to all clients
                         {
                             std::lock_guard<std::mutex> lock(clientsMutex);
@@ -254,32 +225,61 @@ public:
                             }
                         }
                     }
-                } else {
+                } else if(messageJSON["type"].get<std::string>() == "remove_server") {
+                    std::string server_name = messageJSON["server_name"].get<std::string>();
+                    std::string root_password = hashPSWD(messageJSON["root_password"].get<std::string>());
+                    if (localRChanServers.find(server_name) != localRChanServers.end()) {
+                        if (localRChanServers[server_name].root_password != root_password) {
+                            json message = {
+                                {"status", "error"},
+                                {"type", "remove_server"},
+                                {"message", "Incorrect root password for server " + server_name},
+                            };
+                            sendMessage(message, clientSocket);
+                        } else {
+                            localRChanServers.erase(server_name);
+                            servers.erase(server_name);
+                            json message = {
+                                {"status", "success"},
+                                {"type", "remove_server"},
+                                {"message", "Server " + server_name + " successfully removed"},
+                            };
+                            sendMessage(message, clientSocket);
+                            std::cout << "Server " << server_name << " left Rchan!\n";
+                            // Broadcast updated servers to all clients
+                            {
+                                std::lock_guard<std::mutex> lock(clientsMutex);
+                                for(int client : clients) {
+                                    sendAvailableServers(client);
+                                }
+                            }
+                        }
+                    } else {
+                        json message = {
+                            {"status", "error"},
+                            {"type", "remove_server"},
+                            {"message", "Server " + server_name + " does not exist"},
+                        };
+                        sendMessage(message, clientSocket);
+                    }
+                } else if(messageJSON["type"].get<std::string>() == "chat") {
+                    std::string username = messageJSON["username"].get<std::string>();
+                    std::string msg = messageJSON["message"].get<std::string>();
+                    std::string timestampedMessage = "[" + getCurrentTime() + "] " + username + "> " + msg + "\n";
+                    writeMessageToFile(timestampedMessage);
                     json message = {
-                        {"status", "error"},
-                        {"type", "remove_server"},
-                        {"message", "Server " + server_name + " does not exist"},
+                        {"status", "success"},
+                        {"type", "chat"},
+                        {"message", timestampedMessage}
                     };
-                    sendMessage(message, clientSocket);
-                }
-            } else if(messageJson["type"].get<std::string>() == "chat") {
-                std::string username = messageJson["username"].get<std::string>();
-                std::string msg = messageJson["message"].get<std::string>();
-                std::string timestampedMessage = "[" + getCurrentTime() + "] " + username + "> " + msg + "\n";
-                writeMessageToFile(timestampedMessage);
-                json message = {
-                    {"status", "success"},
-                    {"type", "chat"},
-                    {"message", timestampedMessage}
-                };
-                {
-                    std::lock_guard<std::mutex> lock(clientsMutex);
-                    for (int client : clients) {
-                        sendMessage(message, client);
+                    {
+                        std::lock_guard<std::mutex> lock(clientsMutex);
+                        for (int client : clients) {
+                            sendMessage(message, client);
+                        }
                     }
                 }
             }
-
         }
 
         {

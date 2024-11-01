@@ -31,3 +31,26 @@ std::string getCurrentTime() {
     std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", std::localtime(&now));
     return buffer;
 }
+
+std::vector<json> splitJSON(const std::string msg) {
+    std::vector<json> messages;
+    if(msg[0] != '{' or msg.size() <= 2)
+        return messages;
+    int start_brace = 0;
+    unsigned int end_brace = 1;
+    int brace_count = 1;
+    while(end_brace < msg.size()) {
+        if(msg[end_brace] == '{') {
+            brace_count++;
+        } else if(msg[end_brace] == '}') {
+            brace_count--;
+        }
+        if(brace_count == 0) {
+            messages.push_back(json::parse(msg.substr(start_brace, end_brace - start_brace + 1)));
+            start_brace = end_brace + 1;
+            brace_count = 1;
+        }
+        end_brace++;
+    }
+    return messages;
+}

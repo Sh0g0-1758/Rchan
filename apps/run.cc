@@ -1,35 +1,8 @@
-#include<iostream>
-using namespace std;
-
-#include "client.cc"
-#include "server.cc"
+#include "Rchan_req.hpp"
 
 int main() {
-    RchanClient client;
-
-    std::cout << "Enter Username> ";
-    std::getline(std::cin >> std::ws, username);
-
-    std::cout << "Hey " << username << "! Welcome to Rchan. Type 'exit' to quit\n";
-    std::cout << "⏳ Loading chat history ⏳\n";
-
-    std::thread listener([&sock]() { listenForMessages(std::ref(sock)); });
-    listener.detach();
-
-    while (running) {
-        std::cout << "[" << getCurrentTime() << "] " << username << "> " << std::flush;
-        std::string message;
-        std::getline(std::cin, message);
-
-        if (message == "exit") {
-            running = false;
-            break;
-        }
-
-        std::string timestampedMessage = "[" + getCurrentTime() + "] " + username + "> " + message + "\n";
-        sock.write(timestampedMessage);
+    std::vector<json> hello = splitJSON("{\"servers\":{\"Rchan\":\"10.81.92.228\"},\"status\":\"success\",\"type\":\"available_servers\"}");
+    for(const json& message : hello) {
+        std::cout << message.dump(4) << std::endl;
     }
-    
-    sock.close();
-    return 0;
 }

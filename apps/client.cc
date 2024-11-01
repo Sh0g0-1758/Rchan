@@ -19,30 +19,32 @@ public:
         while (running && !sock -> eof()) {
             sock -> read(buffer);
             if (!buffer.empty()) {
-                json message = json::parse(buffer);
-                if(message["status"].get<std::string>() == "error") {
-                    if(message["type"] == "username") {
-                        std::cout << "Error: " << message["message"].get<std::string>() << std::endl;
-                        getUserName();
-                    } else {
-                        std::cout << "Error: " << message["message"].get<std::string>() << std::endl;
+                std::vector<json> messages = splitJSON(buffer);
+                for(const json& message : messages) {
+                    if(message["status"].get<std::string>() == "error") {
+                        if(message["type"] == "username") {
+                            std::cout << "Error: " << message["message"].get<std::string>() << std::endl;
+                            getUserName();
+                        } else {
+                            std::cout << "Error: " << message["message"].get<std::string>() << std::endl;
+                        }
+                    } else if (message["type"].get<std::string>() == "chat") {
+                        std::cout << message["message"].get<std::string>() << std::endl;
+                    } else if (message["type"].get<std::string>() == "username") {
+                        std::cout << message["message"].get<std::string>() << std::endl;
+                    } else if (message["type"] == "available_servers") {
+                        servers = message["servers"].get<std::map<std::string, std::string>>();
+                        for(auto& server : servers) {
+                            std::cout << server.first << " -> " << server.second << std::endl;
+                        }
+                    } else if (message["type"].get<std::string>() == "add_server") {
+                        std::cout << "Added local server to Rchan!\n";
+                    } else if (message["type"].get<std::string>() == "remove_server") {
+                        std::cout << "Removed local server from Rchan!\n";
+                    } else if (message["type"].get<std::string>() == "chat_history") {
+                        std::cout << message["message"].get<std::string>() << std::endl;
+                        std::cout << "Chat history loaded!\n";
                     }
-                } else if (message["type"].get<std::string>() == "chat") {
-                    std::cout << message["message"].get<std::string>() << std::endl;
-                } else if (message["type"].get<std::string>() == "username") {
-                    std::cout << message["message"].get<std::string>() << std::endl;
-                } else if (message["type"] == "available_servers") {
-                    servers = message["servers"].get<std::map<std::string, std::string>>();
-                    for(auto& server : servers) {
-                        std::cout << server.first << " -> " << server.second << std::endl;
-                    }
-                } else if (message["type"].get<std::string>() == "add_server") {
-                    std::cout << "Added local server to Rchan!\n";
-                } else if (message["type"].get<std::string>() == "remove_server") {
-                    std::cout << "Removed local server from Rchan!\n";
-                } else if (message["type"].get<std::string>() == "chat_history") {
-                    std::cout << message["message"].get<std::string>() << std::endl;
-                    std::cout << "Chat history loaded!\n";
                 }
             }
             buffer.clear();
@@ -86,9 +88,6 @@ public:
 
         RsockPtr -> wait_until_closed();
         RsockPtr.reset();
-
-        // Give some time for the socket cleanup
-        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 
         try {
             {
@@ -197,18 +196,15 @@ int main() {
     try {
         RchanClient client;
         client.getUserName();
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-        
-        // Add error handling for server entry
         try {
             client.EnterServer("Rchan");
         } catch (const std::exception& e) {
             std::cout << "Error entering server: " << e.what() << std::endl;
             return 1;
         }
-        
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+
         client.sendMessage("Hello World!");
+        while(true) {}
     } catch (const std::exception& e) {
         std::cout << "Error: " << e.what() << std::endl;
         return 1;
