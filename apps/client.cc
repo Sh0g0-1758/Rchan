@@ -89,7 +89,7 @@ public:
         RsockPtr.reset();
     }
 
-    void EnterServer(std::string server_name) {
+    void EnterServer(std::string server_name, int port) {
         if (servers.find(server_name) == servers.end()) {
             std::cout << "Error: Server " << server_name << " not found!" << std::endl;
             return;
@@ -113,7 +113,7 @@ public:
             {
                 std::lock_guard<std::mutex> lock(socketMutex);
                 RsockPtr = std::make_unique<RchanSocket>();
-                RsockPtr->connect(Address(servers[server_name], 8080));
+                RsockPtr->connect(Address(servers[server_name], port));
             }
 
             running = true;
@@ -241,7 +241,10 @@ int main() {
                 std::cout << "Enter server name> ";
                 std::string server_name;
                 std::getline(std::cin >> std::ws, server_name);
-                client.EnterServer(server_name);
+                std::cout << "Enter server port> ";
+                int server_port;
+                cin >> server_port;
+                client.EnterServer(server_name, server_port);
             } else if(command == "send message") {
                 std::cout << "Enter message> ";
                 std::string message;

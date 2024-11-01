@@ -18,7 +18,7 @@ private:
     std::vector<int> clients{};
     // server_name -> server_ip
     std::map<std::string, std::string> servers{};
-    // server_name -> {server_name, server_ip, root_password, server_password}
+    // server_name -> {server_name, server_ip, server_port, root_password, server_password}
     std::map<std::string, server_info> localRChanServers{};
     std::mutex clientsMutex{};
     std::vector<std::string> usernames{};
@@ -152,10 +152,17 @@ public:
     }
 
     void sendAvailableServers(int clientSocket) {
+        std::vector<std::string> available_servers;
+        for(auto& server : servers) {
+            if(server == "Rchan") {
+                available_servers.push_back(server.first + " -> " + server.second + ":" + std::to_string(PORT));
+            }
+            available_servers.push_back(server.first + " -> " + server.second + ":" + std::to_string(localRChanServers[server.first].server_port));
+        }
         json message = {
             {"status", "success"},
             {"type", "available_servers"},
-            {"servers", servers}
+            {"servers", available_servers}
         };
         sendMessage(message, clientSocket);
     }
