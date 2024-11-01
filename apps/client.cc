@@ -89,7 +89,20 @@ public:
         RsockPtr.reset();
     }
 
-    void EnterServer(std::string server_name, int port) {
+    std::pair<std::string, int> parseIpPort(const std::string& address) {
+        size_t colonPos = address.find(':');
+        if (colonPos == std::string::npos) {
+            throw std::invalid_argument("Invalid address format: missing ':'");
+        }
+        
+        std::string ip = address.substr(0, colonPos);
+        int port = std::stoi(address.substr(colonPos + 1));
+        
+        return {ip, port};
+    }
+
+
+    void EnterServer(std::string server_name) {
         if (servers.find(server_name) == servers.end()) {
             std::cout << "Error: Server " << server_name << " not found!" << std::endl;
             return;
@@ -113,7 +126,8 @@ public:
             {
                 std::lock_guard<std::mutex> lock(socketMutex);
                 RsockPtr = std::make_unique<RchanSocket>();
-                RsockPtr->connect(Address(servers[server_name], port));
+                std::pair<std::string, int> ipPort = parseIpPort(servers[server_name]);
+                RsockPtr->connect(Address(ipPort.first, ipPort.second));
             }
 
             running = true;
@@ -241,10 +255,7 @@ int main() {
                 std::cout << "Enter server name> ";
                 std::string server_name;
                 std::getline(std::cin >> std::ws, server_name);
-                std::cout << "Enter server port> ";
-                int server_port;
-                std::cin >> server_port;
-                client.EnterServer(server_name, server_port);
+                client.EnterServer(server_name);
             } else if(command == "send message") {
                 std::cout << "Enter message> ";
                 std::string message;
