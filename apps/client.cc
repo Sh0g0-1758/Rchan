@@ -2,6 +2,8 @@
 
 #include "Rchan_req.hpp"
 
+#include "local_server.cc"
+
 class RchanClient {
 private:
     std::atomic<bool> running{true};
@@ -13,6 +15,7 @@ private:
     std::map<std::string, std::string> servers{};
     std::mutex socketMutex{};
     std::string fragment_store{};
+    std::unique_ptr<LocalServer> localServerPtr{};
 public:
     void listenForMessages(std::unique_ptr<RchanSocket>& sock) {
         static std::string buffer;
@@ -50,8 +53,11 @@ public:
                         }
                     } else if (message["type"].get<std::string>() == "add_server") {
                         std::cout << "Added local server to Rchan!\n";
+                        localServerPtr = std::make_unique<LocalServer>();
+                        localServerPtr -> Run();
                     } else if (message["type"].get<std::string>() == "remove_server") {
                         std::cout << "Removed local server from Rchan!\n";
+                        localServerPtr.reset();
                     } else if (message["type"].get<std::string>() == "chat_history") {
                         std::cout << message["message"].get<std::string>() << std::endl;
                         std::cout << "Chat history loaded!\n";
@@ -204,6 +210,16 @@ public:
             RsockPtr -> write(messageJson.dump());
         }
     }
+
+    void getServers() {
+        json message = {
+            {"type", "get_servers"}
+        };
+        {
+            std::lock_guard<std::mutex> lock(socketMutex);
+            RsockPtr -> write(message.dump());
+        }
+    }
 };
 
 int main() {
@@ -213,16 +229,30 @@ int main() {
         // std::this_thread::sleep_for(std::chrono::seconds(1));
         
         // Add error handling for server entry
-        try {
-            client.EnterServer("Rchan");
-        } catch (const std::exception& e) {
-            std::cout << "Error entering server: " << e.what() << std::endl;
-            return 1;
+        while(true) {
+            std::cout << "Choose command> host server, enter server, send message, unhost server, get servers, exit" << std::endl;
+            std::string command;
+            std::getline(std::cin >> std::ws, command);
+            if(command == "host server") {
+                client.HostServer();
+            } else if(command == "enter server") {
+                std::cout << "Enter server name> ";
+                std::string server_name;
+                std::getline(std::cin >> std::ws, server_name);
+                client.EnterServer(server_name);
+            } else if(command == "send message") {
+                std::cout << "Enter message> ";
+                std::string message;
+                std::getline(std::cin >> std::ws, message);
+                client.sendMessage(message);
+            } else if(command == "unhost server") {
+                client.unHostServer();
+            } else if(command == "get servers") {
+                client.getServers();
+            } else if(command == "exit") {
+                break;
+            }
         }
-        
-        // std::this_thread::sleep_for(std::chrono::seconds(1));
-        client.sendMessage("Hello World!");
-        while(true) {}
     } catch (const std::exception& e) {
         std::cout << "Error: " << e.what() << std::endl;
         return 1;

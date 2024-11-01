@@ -90,6 +90,12 @@ public:
         std::cout << "Server listening on port " << PORT << "...\n";
     }
 
+    ~RchanServer() {
+        for(int client : clients) {
+            close(client);
+        }
+    }
+
     void Run() {
         while (true) {
             if ((new_socket = accept(server_fd, (sockaddr *)&address, (socklen_t *)&addrlen)) < 0) {
@@ -181,7 +187,9 @@ public:
             fragment_store = split.first;
             for(const json& messageJSON : messagesJSON) {
                 std::cout << messageJSON.dump(4) << std::endl;
-                if (messageJSON["type"].get<std::string>() == "chat_history") {
+                if (messageJSON["type"].get<std::string>() == "get_servers") {
+                    sendAvailableServers(clientSocket);
+                } else if (messageJSON["type"].get<std::string>() == "chat_history") {
                     sendChatHistory(clientSocket);
                 } else if(messageJSON["type"].get<std::string>() == "username") {
                     std::string username = messageJSON["username"].get<std::string>();

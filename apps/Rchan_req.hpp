@@ -7,6 +7,9 @@
 #include <mutex>
 #include <fstream>
 #include <ctime>
+#include <nlohmann/json.hpp>
+
+using json = nlohmann::json;
 
 // server.cc
 #ifdef RCHAN_SERVER
@@ -20,10 +23,6 @@
 #include "socket.hh"
 #include "tcp_minnow_socket.hh"
 #endif
-
-#include <nlohmann/json.hpp>
-
-using json = nlohmann::json;
 
 std::string getCurrentTime() {
     std::time_t now = std::time(nullptr);
