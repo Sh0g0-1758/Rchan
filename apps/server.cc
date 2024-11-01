@@ -152,12 +152,13 @@ public:
     }
 
     void sendAvailableServers(int clientSocket) {
-        std::vector<std::string> available_servers;
+        std::map<std::string, std::string> available_servers;
         for(auto& server : servers) {
             if(server.first == "Rchan") {
-                available_servers.push_back(server.first + " -> " + server.second + ":" + std::to_string(PORT));
+                available_servers["Rchan"] = server.second + ":" + std::to_string(PORT);
+            } else {
+                available_servers[server.first] = server.second + ":" + std::to_string(localRChanServers[server.first].server_port);
             }
-            available_servers.push_back(server.first + " -> " + server.second + ":" + std::to_string(localRChanServers[server.first].server_port));
         }
         json message = {
             {"status", "success"},
