@@ -48,7 +48,6 @@ std::vector<json> splitJSON(const std::string msg) {
         if(brace_count == 0) {
             messages.push_back(json::parse(msg.substr(start_brace, end_brace - start_brace + 1)));
             start_brace = end_brace + 1;
-            brace_count = 1;
         }
         end_brace++;
     }

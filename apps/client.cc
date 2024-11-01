@@ -19,8 +19,11 @@ public:
         while (running && !sock -> eof()) {
             sock -> read(buffer);
             if (!buffer.empty()) {
+                // std::cout << "Received: " << buffer << std::endl;
                 std::vector<json> messages = splitJSON(buffer);
+                // std::cout << messages.size() << std::endl;
                 for(const json& message : messages) {
+                    // std::cout << "Message: " << message.dump(4) << std::endl;
                     if(message["status"].get<std::string>() == "error") {
                         if(message["type"] == "username") {
                             std::cout << "Error: " << message["message"].get<std::string>() << std::endl;
@@ -88,6 +91,9 @@ public:
 
         RsockPtr -> wait_until_closed();
         RsockPtr.reset();
+
+        // Give some time for the socket cleanup
+        // std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 
         try {
             {
@@ -196,13 +202,17 @@ int main() {
     try {
         RchanClient client;
         client.getUserName();
+        // std::this_thread::sleep_for(std::chrono::seconds(1));
+        
+        // Add error handling for server entry
         try {
             client.EnterServer("Rchan");
         } catch (const std::exception& e) {
             std::cout << "Error entering server: " << e.what() << std::endl;
             return 1;
         }
-
+        
+        // std::this_thread::sleep_for(std::chrono::seconds(1));
         client.sendMessage("Hello World!");
         while(true) {}
     } catch (const std::exception& e) {

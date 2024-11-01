@@ -168,8 +168,10 @@ public:
             }
 
             std::string REVCDmessage(buffer, bytesRead);
+            // std::cout << "Received: " << REVCDmessage << std::endl;
             std::vector<json> messagesJSON = splitJSON(REVCDmessage);
             for(const json& messageJSON : messagesJSON) {
+                // std::cout << messageJSON.dump(4) << std::endl;
                 if (messageJSON["type"].get<std::string>() == "chat_history") {
                     sendChatHistory(clientSocket);
                 } else if(messageJSON["type"].get<std::string>() == "username") {
