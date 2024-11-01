@@ -12,6 +12,7 @@ private:
     // server_name -> server_ip
     std::map<std::string, std::string> servers{};
     std::mutex socketMutex{};
+    std::string fragment_store{};
 public:
     void listenForMessages(std::unique_ptr<RchanSocket>& sock) {
         static std::string buffer;
@@ -19,11 +20,18 @@ public:
         while (running && !sock -> eof()) {
             sock -> read(buffer);
             if (!buffer.empty()) {
-                // std::cout << "Received: " << buffer << std::endl;
-                std::vector<json> messages = splitJSON(buffer);
-                // std::cout << messages.size() << std::endl;
+                std::cout << "Received: " << buffer << std::endl;
+                std::pair<std::string, std::vector<json>> split = splitJSON(buffer);
+                std::vector<json> messages = split.second;
+                std::cout << messages.size() << std::endl;
+                fragment_store += split.first;
+                split = splitJSON(fragment_store);
+                for(auto it : split.second) {
+                    messages.push_back(it);
+                }
+                fragment_store = split.first;
                 for(const json& message : messages) {
-                    // std::cout << "Message: " << message.dump(4) << std::endl;
+                    std::cout << "Message: " << message.dump(4) << std::endl;
                     if(message["status"].get<std::string>() == "error") {
                         if(message["type"] == "username") {
                             std::cout << "Error: " << message["message"].get<std::string>() << std::endl;

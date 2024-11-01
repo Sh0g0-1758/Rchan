@@ -32,11 +32,11 @@ std::string getCurrentTime() {
     return buffer;
 }
 
-std::vector<json> splitJSON(const std::string msg) {
+std::pair<std::string, std::vector<json>> splitJSON(const std::string msg) {
     std::vector<json> messages;
     if(msg[0] != '{' or msg.size() <= 2)
-        return messages;
-    int start_brace = 0;
+        return {msg, messages};
+    unsigned int start_brace = 0;
     unsigned int end_brace = 1;
     int brace_count = 1;
     while(end_brace < msg.size()) {
@@ -51,5 +51,9 @@ std::vector<json> splitJSON(const std::string msg) {
         }
         end_brace++;
     }
-    return messages;
+    if(start_brace < msg.size()) {
+        return {msg.substr(start_brace), messages};
+    } else {
+        return {"", messages};
+    }
 }

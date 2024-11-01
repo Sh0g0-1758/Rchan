@@ -155,6 +155,7 @@ public:
 
     void handleClient(int clientSocket) {
         char buffer[BUFFER_SIZE]{};
+        std::string fragment_store{};
         std::cout << "Handling Client\n";
         sendAvailableServers(clientSocket);
 
@@ -168,10 +169,18 @@ public:
             }
 
             std::string REVCDmessage(buffer, bytesRead);
-            // std::cout << "Received: " << REVCDmessage << std::endl;
-            std::vector<json> messagesJSON = splitJSON(REVCDmessage);
+            std::cout << "Received: " << REVCDmessage << std::endl;
+            std::pair<std::string, std::vector<json>> split = splitJSON(REVCDmessage);
+            std::vector<json> messagesJSON = split.second;
+            std::cout << messagesJSON.size() << std::endl;
+            fragment_store += split.first;
+            split = splitJSON(fragment_store);
+            for(auto it : split.second) {
+                messagesJSON.push_back(it);
+            }
+            fragment_store = split.first;
             for(const json& messageJSON : messagesJSON) {
-                // std::cout << messageJSON.dump(4) << std::endl;
+                std::cout << messageJSON.dump(4) << std::endl;
                 if (messageJSON["type"].get<std::string>() == "chat_history") {
                     sendChatHistory(clientSocket);
                 } else if(messageJSON["type"].get<std::string>() == "username") {
