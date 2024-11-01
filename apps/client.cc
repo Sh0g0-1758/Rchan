@@ -243,7 +243,7 @@ int main() {
                 std::getline(std::cin >> std::ws, server_name);
                 std::cout << "Enter server port> ";
                 int server_port;
-                cin >> server_port;
+                std::cin >> server_port;
                 client.EnterServer(server_name, server_port);
             } else if(command == "send message") {
                 std::cout << "Enter message> ";
