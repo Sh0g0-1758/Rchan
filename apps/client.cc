@@ -1,8 +1,28 @@
 #include "RchanClient.cc"
 
+void showWelcomeBanner()
+{
+  std::cout << Color::CYAN << Color::BOLD;
+  std::cout << R"(
+ /$$$$$$$   /$$$$$$  /$$   /$$  /$$$$$$  /$$   /$$
+| $$__  $$ /$$__  $$| $$  | $$ /$$__  $$| $$$ | $$
+| $$  \ $$| $$  \__/| $$  | $$| $$  \ $$| $$$$| $$
+| $$$$$$$/| $$      | $$$$$$$$| $$$$$$$$| $$ $$ $$
+| $$__  $$| $$      | $$__  $$| $$__  $$| $$  $$$$
+| $$  \ $$| $$    $$| $$  | $$| $$  | $$| $$\  $$$
+| $$  | $$|  $$$$$$/| $$  | $$| $$  | $$| $$ \  $$
+|__/  |__/ \______/ |__/  |__/|__/  |__/|__/  \__/
+    )" << Color::RESET
+            << std::endl;
+
+  std::cout << Color::YELLOW << "Welcome to Rchan - Your Secure Chat Platform!" << Color::RESET << "\n";
+  std::cout << "═══════════════════════════════════════════════\n";
+}
+
 int main()
 {
   try {
+    showWelcomeBanner();
     RchanClient client;
     client.getUserName();
 

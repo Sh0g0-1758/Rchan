@@ -2,6 +2,9 @@
 
 // common
 #include <iostream>
+#include <iomanip>
+#include <sys/ioctl.h>
+#include <streambuf>
 #include <thread>
 #include <vector>
 #include <mutex>
@@ -23,6 +26,17 @@ using json = nlohmann::json;
 #include "socket.hh"
 #include "tcp_minnow_socket.hh"
 #endif
+
+namespace Color {
+    const std::string RESET   = "\033[0m";
+    const std::string RED     = "\033[31m";
+    const std::string GREEN   = "\033[32m";
+    const std::string YELLOW  = "\033[33m";
+    const std::string BLUE    = "\033[34m";
+    const std::string MAGENTA = "\033[35m";
+    const std::string CYAN    = "\033[36m";
+    const std::string BOLD    = "\033[1m";
+}
 
 std::string getCurrentTime() {
     std::time_t now = std::time(nullptr);
