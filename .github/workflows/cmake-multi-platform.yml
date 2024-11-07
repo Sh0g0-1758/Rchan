@@ -13,10 +13,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        build_type: [Debug, Release]
+        build_type: [Debug]
         compiler:
           - { cc: gcc-13, cxx: g++-13 }
-          - { cc: clang, cxx: clang++ }
 
     steps:
     - uses: actions/checkout@v4

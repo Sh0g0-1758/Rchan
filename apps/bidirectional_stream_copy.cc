@@ -45,7 +45,7 @@ void bidirectional_stream_copy( Socket& socket, string_view peer_name )
     },
     [&] { _outbound.writer().close(); },
     [&] {
-      cerr << "DEBUG: Outbound stream had error from source.\n";
+      // cerr << "DEBUG: Outbound stream had error from source.\n";
       _outbound.set_error();
       _inbound.set_error();
     } );
@@ -62,7 +62,7 @@ void bidirectional_stream_copy( Socket& socket, string_view peer_name )
       if ( _outbound.reader().is_finished() ) {
         socket.shutdown( SHUT_WR );
         _outbound_shutdown = true;
-        cerr << "DEBUG: Outbound stream to " << peer_name << " finished.\n";
+        // cerr << "DEBUG: Outbound stream to " << peer_name << " finished.\n";
       }
     },
     [&] {
@@ -70,7 +70,7 @@ void bidirectional_stream_copy( Socket& socket, string_view peer_name )
     },
     [&] { _outbound.writer().close(); },
     [&] {
-      cerr << "DEBUG: Outbound stream had error from destination.\n";
+      // cerr << "DEBUG: Outbound stream had error from destination.\n";
       _outbound.set_error();
       _inbound.set_error();
     } );
@@ -95,7 +95,7 @@ void bidirectional_stream_copy( Socket& socket, string_view peer_name )
     },
     [&] { _inbound.writer().close(); },
     [&] {
-      cerr << "DEBUG: Inbound stream had error from source.\n";
+      // cerr << "DEBUG: Inbound stream had error from source.\n";
       _outbound.set_error();
       _inbound.set_error();
     } );
@@ -112,8 +112,8 @@ void bidirectional_stream_copy( Socket& socket, string_view peer_name )
       if ( _inbound.reader().is_finished() ) {
         _output.close();
         _inbound_shutdown = true;
-        cerr << "DEBUG: Inbound stream from " << peer_name << " finished"
-             << ( _inbound.has_error() ? " uncleanly.\n" : ".\n" );
+        // cerr << "DEBUG: Inbound stream from " << peer_name << " finished"
+        //      << ( _inbound.has_error() ? " uncleanly.\n" : ".\n" );
       }
     },
     [&] {
@@ -121,7 +121,7 @@ void bidirectional_stream_copy( Socket& socket, string_view peer_name )
     },
     [&] { _inbound.writer().close(); },
     [&] {
-      cerr << "DEBUG: Inbound stream had error from destination.\n";
+      // cerr << "DEBUG: Inbound stream had error from destination.\n";
       _outbound.set_error();
       _inbound.set_error();
     } );

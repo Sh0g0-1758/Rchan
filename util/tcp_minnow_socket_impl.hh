@@ -92,8 +92,8 @@ void TCPMinnowSocket<AdaptT>::_initialize_TCP( const TCPConfig& config )
 
       // debugging output:
       if ( _thread_data.eof() and _tcp.value().sender().sequence_numbers_in_flight() == 0 and not _fully_acked ) {
-        std::cerr << "DEBUG: minnow outbound stream to " << _datagram_adapter.config().destination.to_string()
-                  << " has been fully acknowledged.\n";
+        // std::cerr << "DEBUG: minnow outbound stream to " << _datagram_adapter.config().destination.to_string()
+        //           << " has been fully acknowledged.\n";
         _fully_acked = true;
       }
     },
@@ -115,10 +115,10 @@ void TCPMinnowSocket<AdaptT>::_initialize_TCP( const TCPConfig& config )
         _outbound_shutdown = true;
 
         // debugging output:
-        std::cerr << "DEBUG: minnow outbound stream to " << _datagram_adapter.config().destination.to_string()
-                  << " finished (" << _tcp.value().sender().sequence_numbers_in_flight() << " seqno"
-                  << ( _tcp.value().sender().sequence_numbers_in_flight() == 1 ? "" : "s" )
-                  << " still in flight).\n";
+        // std::cerr << "DEBUG: minnow outbound stream to " << _datagram_adapter.config().destination.to_string()
+        //           << " finished (" << _tcp.value().sender().sequence_numbers_in_flight() << " seqno"
+        //           << ( _tcp.value().sender().sequence_numbers_in_flight() == 1 ? "" : "s" )
+        //           << " still in flight).\n";
       }
 
       _tcp->push( [&]( auto x ) { _datagram_adapter.write( x ); } );
@@ -157,8 +157,8 @@ void TCPMinnowSocket<AdaptT>::_initialize_TCP( const TCPConfig& config )
         _inbound_shutdown = true;
 
         // debugging output:
-        std::cerr << "DEBUG: minnow inbound stream from " << _datagram_adapter.config().destination.to_string()
-                  << " finished " << ( inbound.has_error() ? "uncleanly.\n" : "cleanly.\n" );
+        // std::cerr << "DEBUG: minnow inbound stream from " << _datagram_adapter.config().destination.to_string()
+        //          << " finished " << ( inbound.has_error() ? "uncleanly.\n" : "cleanly.\n" );
       }
     },
     [&] {
@@ -168,7 +168,7 @@ void TCPMinnowSocket<AdaptT>::_initialize_TCP( const TCPConfig& config )
     },
     [&] {},
     [&] {
-      std::cerr << "DEBUG: minnow inbound stream had error.\n";
+      // std::cerr << "DEBUG: minnow inbound stream had error.\n";
       _tcp->inbound_reader().set_error();
     } );
 }
@@ -211,7 +211,7 @@ void TCPMinnowSocket<AdaptT>::wait_until_closed()
 {
   shutdown( SHUT_RDWR );
   if ( _tcp_thread.joinable() ) {
-    std::cerr << "DEBUG: minnow waiting for clean shutdown... ";
+    // std::cerr << "DEBUG: minnow waiting for clean shutdown... ";
     _tcp_thread.join();
     std::cerr << "done.\n";
   }
@@ -230,7 +230,7 @@ void TCPMinnowSocket<AdaptT>::connect( const TCPConfig& c_tcp, const FdAdapterCo
 
   _datagram_adapter.config_mut() = c_ad;
 
-  std::cerr << "DEBUG: minnow connecting to " << c_ad.destination.to_string() << "...\n";
+  // std::cerr << "DEBUG: minnow connecting to " << c_ad.destination.to_string() << "...\n";
 
   if ( not _tcp.has_value() ) {
     throw std::runtime_error( "TCPPeer not successfully initialized" );
@@ -244,9 +244,9 @@ void TCPMinnowSocket<AdaptT>::connect( const TCPConfig& c_tcp, const FdAdapterCo
 
   _tcp_loop( [&] { return _tcp->sender().sequence_numbers_in_flight() == 1; } );
   if ( _tcp->inbound_reader().has_error() ) {
-    std::cerr << "DEBUG: minnow error on connecting to " << c_ad.destination.to_string() << ".\n";
+    // std::cerr << "DEBUG: minnow error on connecting to " << c_ad.destination.to_string() << ".\n";
   } else {
-    std::cerr << "DEBUG: minnow successfully connected to " << c_ad.destination.to_string() << ".\n";
+    // std::cerr << "DEBUG: minnow successfully connected to " << c_ad.destination.to_string() << ".\n";
   }
 
   _tcp_thread = std::thread( &TCPMinnowSocket::_tcp_main, this );
@@ -266,9 +266,9 @@ void TCPMinnowSocket<AdaptT>::listen_and_accept( const TCPConfig& c_tcp, const F
   _datagram_adapter.config_mut() = c_ad;
   _datagram_adapter.set_listening( true );
 
-  std::cerr << "DEBUG: minnow listening for incoming connection...\n";
+  // std::cerr << "DEBUG: minnow listening for incoming connection...\n";
   _tcp_loop( [&] { return ( not _tcp->has_ackno() ) or ( _tcp->sender().sequence_numbers_in_flight() ); } );
-  std::cerr << "DEBUG: minnow new connection from " << _datagram_adapter.config().destination.to_string() << ".\n";
+  // std::cerr << "DEBUG: minnow new connection from " << _datagram_adapter.config().destination.to_string() << ".\n";
 
   _tcp_thread = std::thread( &TCPMinnowSocket::_tcp_main, this );
 }
@@ -283,8 +283,8 @@ void TCPMinnowSocket<AdaptT>::_tcp_main()
     _tcp_loop( [] { return true; } );
     shutdown( SHUT_RDWR );
     if ( not _tcp.value().active() ) {
-      std::cerr << "DEBUG: minnow TCP connection finished "
-                << ( _tcp->inbound_reader().has_error() ? "uncleanly.\n" : "cleanly.\n" );
+      // std::cerr << "DEBUG: minnow TCP connection finished "
+      //           << ( _tcp->inbound_reader().has_error() ? "uncleanly.\n" : "cleanly.\n" );
     }
     _tcp.reset();
   } catch ( const std::exception& e ) {
