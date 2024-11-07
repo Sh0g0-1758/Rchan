@@ -37,7 +37,15 @@ int main()
         std::cout << "Enter server name> ";
         std::string server_name;
         std::getline( std::cin >> std::ws, server_name );
-        client.EnterServer( server_name );
+        if(std::find(client.getAvailableServers().begin(), client.getAvailableServers().end(), server_name) == client.getAvailableServers().end()) {
+          std::cout << "Server does not exist\n";
+          continue;
+        }
+        if (server_name == "Rchan") {
+          client.EnterServer( "Rchan", client.getRchanIP(), 8080);
+        } else {
+          client.sendPassword( server_name );
+        }
       } else if ( command == "send message" ) {
         std::cout << "Enter message> ";
         std::string message;

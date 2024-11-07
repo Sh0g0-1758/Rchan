@@ -28,9 +28,9 @@ void RchanClient::listenForMessages( std::unique_ptr<RchanSocket>& sock )
         } else if ( message["type"].get<std::string>() == "username" ) {
           std::cout << message["message"].get<std::string>() << std::endl;
         } else if ( message["type"] == "available_servers" ) {
-          servers = message["servers"].get<std::map<std::string, std::string>>();
+          servers = message["servers"].get<std::vector<std::string>>();
           for ( auto& server : servers ) {
-            std::cout << server.first << " -> " << server.second << std::endl;
+            std::cout << server << std::endl;
           }
         } else if ( message["type"].get<std::string>() == "add_server" ) {
           std::cout << "Added local server to Rchan!\n";
@@ -42,6 +42,9 @@ void RchanClient::listenForMessages( std::unique_ptr<RchanSocket>& sock )
         } else if ( message["type"].get<std::string>() == "chat_history" ) {
           std::cout << message["message"].get<std::string>() << std::endl;
           std::cout << "Chat history loaded!\n";
+        } else if ( message["type"].get<std::string>() == "password" ) {
+          std::cout << message["message"].get<std::string>() << std::endl;
+          EnterServer( message["server_name"].get<std::string>(), message["server_ip"].get<std::string>(), message["server_port"].get<int>());
         }
       }
     }
@@ -49,7 +52,7 @@ void RchanClient::listenForMessages( std::unique_ptr<RchanSocket>& sock )
   }
 }
 
-RchanClient::RchanClient() : running( true )
+RchanClient::RchanClient() : running( true ), current_server( "Rchan" )
 {
   RchanServerIP = "10.81.92.228";
   {
@@ -72,26 +75,8 @@ RchanClient::~RchanClient()
   RsockPtr.reset();
 }
 
-std::pair<std::string, int> RchanClient::parseIpPort( const std::string& address )
+void RchanClient::EnterServer( std::string server_name, std::string server_ip, int server_port )
 {
-  size_t colonPos = address.find( ':' );
-  if ( colonPos == std::string::npos ) {
-    throw std::invalid_argument( "Invalid address format: missing ':'" );
-  }
-
-  std::string ip = address.substr( 0, colonPos );
-  int port = std::stoi( address.substr( colonPos + 1 ) );
-
-  return { ip, port };
-}
-
-void RchanClient::EnterServer( std::string server_name )
-{
-  if ( servers.find( server_name ) == servers.end() ) {
-    std::cout << "Error: Server " << server_name << " not found!" << std::endl;
-    return;
-  }
-
   running = false;
 
   if ( RchanClientPtr && RchanClientPtr->joinable() ) {
@@ -105,11 +90,11 @@ void RchanClient::EnterServer( std::string server_name )
     {
       std::lock_guard<std::mutex> lock( socketMutex );
       RsockPtr = std::make_unique<RchanSocket>();
-      std::pair<std::string, int> ipPort = parseIpPort( servers[server_name] );
-      RsockPtr->connect( Address( ipPort.first, ipPort.second ) );
+      RsockPtr->connect( Address( server_ip, server_port ) );
     }
 
     running = true;
+    set_current_server(server_name);
     RchanClientPtr = std::make_unique<std::thread>( [this]() { listenForMessages( std::ref( RsockPtr ) ); } );
     RchanClientPtr->detach();
 
@@ -117,6 +102,20 @@ void RchanClient::EnterServer( std::string server_name )
   } catch ( const std::exception& e ) {
     std::cout << "Error connecting to server: " << e.what() << std::endl;
     running = false;
+  }
+}
+
+void RchanClient::sendPassword( std::string server_name )
+{
+  std::cout << "Enter password for " + server_name + " > ";
+  std::string server_password;
+  std::getline( std::cin >> std::ws, server_password );
+
+  json message = { { "type", "password" }, { "server_name", server_name }, { "server_password", server_password } };
+
+  {
+    std::lock_guard<std::mutex> lock( socketMutex );
+    RsockPtr->write( message.dump() );
   }
 }
 
@@ -160,6 +159,11 @@ void RchanClient::unHostServer()
   std::cout << "Enter server name> ";
   std::string unhost_server_name;
   std::getline( std::cin >> std::ws, unhost_server_name );
+
+  if(get_current_server() != "Rchan") {
+    std::cout << "To unhost, you must be in Rchan server\n";
+    return;
+  }
 
   std::cout << "Enter root password> ";
   std::string root_password;

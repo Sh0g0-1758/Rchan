@@ -12,13 +12,14 @@ private:
   std::unique_ptr<RchanSocket> RsockPtr;
   std::string RchanServerIP;
   std::unique_ptr<std::thread> RchanClientPtr;
-  std::map<std::string, std::string> servers;
+  std::vector<std::string> servers;
   std::mutex socketMutex;
   std::string fragment_store;
   std::unique_ptr<LocalServer> localServerPtr;
+  std::string current_server;
 
   void listenForMessages( std::unique_ptr<RchanSocket>& sock );
-  std::pair<std::string, int> parseIpPort( const std::string& address );
+  void set_current_server(std::string server) { current_server = server; }
 
 public:
   RchanClient();
@@ -27,11 +28,15 @@ public:
   RchanClient( const RchanClient& ) = delete;
   RchanClient& operator=( const RchanClient& ) = delete;
 
-  void EnterServer( std::string server_name );
+  void EnterServer( std::string server_name, std::string server_ip, int server_port );
   void HostServer();
   void unHostServer();
   void getUserName();
   void getChatHistory();
   void sendMessage( std::string message );
   void getServers();
+  void sendPassword( std::string server_name );
+  std::string getRchanIP() { return RchanServerIP; }
+  std::vector<std::string> getAvailableServers() { return servers; }
+  std::string get_current_server() { return current_server; }
 };

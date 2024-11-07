@@ -126,14 +126,18 @@ void RchanServer::sendChatHistory( int clientSocket )
 
 void RchanServer::sendAvailableServers( int clientSocket )
 {
-  std::map<std::string, std::string> available_servers;
+  // std::map<std::string, std::string> available_servers;
+  // for ( auto& server : servers ) {
+  //   if ( server.first == "Rchan" ) {
+  //     available_servers["Rchan"] = server.second + ":" + std::to_string( PORT );
+  //   } else {
+  //     available_servers[server.first]
+  //       = server.second + ":" + std::to_string( localRChanServers[server.first].server_port );
+  //   }
+  // }
+  std::vector<std::string> available_servers;
   for ( auto& server : servers ) {
-    if ( server.first == "Rchan" ) {
-      available_servers["Rchan"] = server.second + ":" + std::to_string( PORT );
-    } else {
-      available_servers[server.first]
-        = server.second + ":" + std::to_string( localRChanServers[server.first].server_port );
-    }
+    available_servers.push_back( server.first );
   }
   nlohmann::json message
     = { { "status", "success" }, { "type", "available_servers" }, { "servers", available_servers } };
@@ -187,6 +191,29 @@ void RchanServer::handleClient( int clientSocket )
           nlohmann::json message = { { "status", "success" },
                                      { "type", "username" },
                                      { "message", "Username " + username + " successfully set" } };
+          sendMessage( message, clientSocket );
+        }
+      } else if (messageJSON["type"].get<std::string>() == "password") {
+        std::string server_name = messageJSON["server_name"].get<std::string>();
+        std::string server_password = hashPSWD( messageJSON["server_password"].get<std::string>() );
+
+        if ( localRChanServers.find( server_name ) == localRChanServers.end() ) {
+          nlohmann::json message = { { "status", "error" },
+                                     { "type", "password" },
+                                     { "message", "Server " + server_name + " does not exist" } };
+          sendMessage( message, clientSocket );
+        } else if ( localRChanServers[server_name].server_password != server_password ) {
+          nlohmann::json message = { { "status", "error" },
+                                     { "type", "password" },
+                                     { "message", "Incorrect server password for server " + server_name } };
+          sendMessage( message, clientSocket );
+        } else {
+          nlohmann::json message = { { "status", "success" },
+                                     { "type", "password" },
+                                     { "server_name", server_name },
+                                     { "server_ip", localRChanServers[server_name].server_ip },
+                                     { "server_port", localRChanServers[server_name].server_port },
+                                     { "message", "Server " + server_name + " password successfully verified" } };
           sendMessage( message, clientSocket );
         }
       } else if ( messageJSON["type"].get<std::string>() == "add_server" ) {
