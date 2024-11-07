@@ -42,7 +42,7 @@ int main()
           continue;
         }
         if (server_name == "Rchan") {
-          client.EnterServer( client.getRchanIP(), 8080);
+          client.EnterServer( "Rchan", client.getRchanIP(), 8080);
         } else {
           client.sendPassword( server_name );
         }

@@ -44,7 +44,7 @@ void RchanClient::listenForMessages( std::unique_ptr<RchanSocket>& sock )
           std::cout << "Chat history loaded!\n";
         } else if ( message["type"].get<std::string>() == "password" ) {
           std::cout << message["message"].get<std::string>() << std::endl;
-          EnterServer( message["server_ip"].get<std::string>(), message["server_port"].get<int>());
+          EnterServer( message["server_name"].get<std::string>(), message["server_ip"].get<std::string>(), message["server_port"].get<int>());
         }
       }
     }
@@ -52,7 +52,7 @@ void RchanClient::listenForMessages( std::unique_ptr<RchanSocket>& sock )
   }
 }
 
-RchanClient::RchanClient() : running( true )
+RchanClient::RchanClient() : running( true ), current_server( "Rchan" )
 {
   RchanServerIP = "10.81.92.228";
   {
@@ -75,20 +75,7 @@ RchanClient::~RchanClient()
   RsockPtr.reset();
 }
 
-std::pair<std::string, int> RchanClient::parseIpPort( const std::string& address )
-{
-  size_t colonPos = address.find( ':' );
-  if ( colonPos == std::string::npos ) {
-    throw std::invalid_argument( "Invalid address format: missing ':'" );
-  }
-
-  std::string ip = address.substr( 0, colonPos );
-  int port = std::stoi( address.substr( colonPos + 1 ) );
-
-  return { ip, port };
-}
-
-void RchanClient::EnterServer( std::string server_ip, int server_port )
+void RchanClient::EnterServer( std::string server_name, std::string server_ip, int server_port )
 {
   running = false;
 
@@ -107,6 +94,7 @@ void RchanClient::EnterServer( std::string server_ip, int server_port )
     }
 
     running = true;
+    set_current_server(server_name);
     RchanClientPtr = std::make_unique<std::thread>( [this]() { listenForMessages( std::ref( RsockPtr ) ); } );
     RchanClientPtr->detach();
 
@@ -171,6 +159,11 @@ void RchanClient::unHostServer()
   std::cout << "Enter server name> ";
   std::string unhost_server_name;
   std::getline( std::cin >> std::ws, unhost_server_name );
+
+  if(get_current_server() != "Rchan") {
+    std::cout << "To unhost, you must be in Rchan server\n";
+    return;
+  }
 
   std::cout << "Enter root password> ";
   std::string root_password;
