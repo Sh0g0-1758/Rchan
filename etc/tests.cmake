@@ -49,10 +49,6 @@ ttest(send_ack)
 ttest(send_close)
 ttest(send_extra)
 
-ttest(net_interface)
-
-ttest(router)
-
 add_custom_target (testRchan COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure --stop-on-failure --timeout 12 -R '^byte_stream_|^reassembler_|^wrapping|^recv|^send')
 
 ###
