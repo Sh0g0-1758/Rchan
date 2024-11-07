@@ -11,6 +11,7 @@ The architecture of Rchan closely follows that of 4chan (its namesake) but with 
 To build Rchan run
 
 ```
+./scripts/tun.sh start 144
 mkdir build
 cd build
 cmake ..
