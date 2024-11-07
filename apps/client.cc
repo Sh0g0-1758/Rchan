@@ -26,10 +26,8 @@ public:
     while ( running && !sock->eof() ) {
       sock->read( buffer );
       if ( !buffer.empty() ) {
-        std::cout << "Received: " << buffer << std::endl;
         std::pair<std::string, std::vector<json>> split = splitJSON( buffer );
         std::vector<json> messages = split.second;
-        std::cout << messages.size() << std::endl;
         fragment_store += split.first;
         split = splitJSON( fragment_store );
         for ( auto it : split.second ) {
@@ -37,7 +35,6 @@ public:
         }
         fragment_store = split.first;
         for ( const json& message : messages ) {
-          std::cout << "Message: " << message.dump( 4 ) << std::endl;
           if ( message["status"].get<std::string>() == "error" ) {
             if ( message["type"] == "username" ) {
               std::cout << "Error: " << message["message"].get<std::string>() << std::endl;
