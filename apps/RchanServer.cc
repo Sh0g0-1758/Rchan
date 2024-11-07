@@ -126,15 +126,6 @@ void RchanServer::sendChatHistory( int clientSocket )
 
 void RchanServer::sendAvailableServers( int clientSocket )
 {
-  // std::map<std::string, std::string> available_servers;
-  // for ( auto& server : servers ) {
-  //   if ( server.first == "Rchan" ) {
-  //     available_servers["Rchan"] = server.second + ":" + std::to_string( PORT );
-  //   } else {
-  //     available_servers[server.first]
-  //       = server.second + ":" + std::to_string( localRChanServers[server.first].server_port );
-  //   }
-  // }
   std::vector<std::string> available_servers;
   for ( auto& server : servers ) {
     available_servers.push_back( server.first );
