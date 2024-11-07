@@ -157,6 +157,7 @@ void RchanServer::handleClient( int clientSocket )
     }
 
     std::string REVCDmessage( buffer, bytesRead );
+    std::cout << "Received: " << REVCDmessage << std::endl;
     std::pair<std::string, std::vector<nlohmann::json>> split = splitJSON( REVCDmessage );
     std::vector<nlohmann::json> messagesJSON = split.second;
     fragment_store += split.first;
@@ -167,6 +168,8 @@ void RchanServer::handleClient( int clientSocket )
     fragment_store = split.first;
 
     for ( const nlohmann::json& messageJSON : messagesJSON ) {
+      std::cout << "JSON>\n";
+      std::cout << messageJSON.dump(4) << std::endl;
       if ( messageJSON["type"].get<std::string>() == "get_servers" ) {
         sendAvailableServers( clientSocket );
       } else if ( messageJSON["type"].get<std::string>() == "chat_history" ) {
