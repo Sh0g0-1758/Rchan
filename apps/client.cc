@@ -1,4 +1,5 @@
 #include "RchanClient.cc"
+#include "gui.cc"
 
 void showWelcomeBanner()
 {
@@ -21,16 +22,52 @@ void showWelcomeBanner()
 
 int main()
 {
+    std::ofstream clear_server("window2.txt", std::ios::trunc);
+    std::ofstream clear_error("window1.txt", std::ios::trunc);
+    clear_server.close();
+    clear_error.close();
+
+    initscr();
+    start_color();
+    // print_banner();
+    // std::this_thread::sleep_for(std::chrono::seconds(2));
+    cbreak();
+    noecho();
+    keypad(stdscr, TRUE);  // Enable keyboard mapping
+
+    // Enable scrolling
+    scrollok(stdscr, TRUE);
+
+    // Create two windows - left and right half
+    getmaxyx(stdscr, RchanGUI::max_y, RchanGUI::max_x);
+    RchanGUI::left_win = newwin(RchanGUI::max_y-RchanGUI::BOTTOM_HEIGHT, RchanGUI::max_x/2 - 0.5, 0, 0);
+    RchanGUI::right_win = newwin(RchanGUI::max_y-RchanGUI::BOTTOM_HEIGHT, RchanGUI::max_x/2 -0.5, 0, RchanGUI::max_x/2+0/5);
+    RchanGUI::bottom_win = newwin(RchanGUI::BOTTOM_HEIGHT, RchanGUI::max_x, RchanGUI::max_y - RchanGUI::BOTTOM_HEIGHT, 0);
+    // clear();
+    // refresh();
+    // wrefresh(left_win);
+    //  wrefresh(right_win);
+    //   wrefresh(bottom_win);
+    // Enable scrolling for both windows
+    scrollok(RchanGUI::left_win, TRUE);
+    scrollok(RchanGUI::right_win, TRUE);
+    scrollok(RchanGUI::bottom_win,TRUE);
+    
+    // Enable keypad for both windows
+    keypad(RchanGUI::left_win, TRUE);
+    keypad(RchanGUI::right_win, TRUE);
+    keypad(RchanGUI::bottom_win, TRUE);
+
+    std::thread update_thread(RchanGUI::update_right_window);
+    // std::thread error_thread(update_left_window);
+    std::string command;
   try {
     showWelcomeBanner();
     RchanClient client;
     client.getUserName();
 
     while ( true ) {
-      std::cout << "Choose command> host server, enter server, send message, unhost server, get servers, exit"
-                << std::endl;
-      std::string command;
-      std::getline( std::cin >> std::ws, command );
+      command = RchanGUI::get_input( "Choose command> host server, enter server, send message, unhost server, get servers, exit\n" );
       if ( command == "host server" ) {
         client.HostServer();
       } else if ( command == "enter server" ) {

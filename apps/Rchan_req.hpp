@@ -25,6 +25,13 @@ using json = nlohmann::json;
 #ifdef RCHAN_CLIENT
 #include "socket.hh"
 #include "tcp_minnow_socket.hh"
+#include <ncurses.h>
+#endif
+
+// gui.hh
+#ifdef RCHAN_GUI
+#include <ncurses.h>
+#include <atomic>
 #endif
 
 namespace Color {
