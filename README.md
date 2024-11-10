@@ -1,4 +1,4 @@
-# Rchan
+<image src="./assets/logo.png" alt="Rchan Logo">
 
 ## A p2p networking platform built on a custom TCP implementation.
 
